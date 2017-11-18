@@ -149,9 +149,14 @@ func readValues(managementURL string, req readRequest) (resp response, err error
 func writeValue(managementURL string, sensorID int, valueName string, value string) error {
 	//Send request
 	url := fmt.Sprintf("%v/cgi-bin/writeVal.cgi?G%v.%v=%v", managementURL, sensorID, valueName, value)
-	_, err := http.Get(url)
+	result, err := http.Get(url)
 	if err != nil {
 		return errors.New("error sending data to server")
+	}
+	defer result.Body.Close()
+	_, err = ioutil.ReadAll(result.Body)
+	if err != nil {
+		return errors.New("error reading response")
 	}
 
 	return nil
@@ -206,7 +211,7 @@ func GetSensors(managementURL string, sensorCount int) (sensors []Sensor, err er
 		req.Items[i*5+1].Name = fmt.Sprintf("G%v.SollTemp", i)
 		req.Items[i*5+2].Name = fmt.Sprintf("G%v.name", i)
 		req.Items[i*5+3].Name = fmt.Sprintf("G%v.WeekProg", i)
-		req.Items[i*5+4].Name = fmt.Sprintf("G%v.OPmode", i)
+		req.Items[i*5+4].Name = fmt.Sprintf("G%v.OPMode", i)
 	}
 
 	resp, err := readValues(managementURL, req)
@@ -247,7 +252,7 @@ func GetSensors(managementURL string, sensorCount int) (sensors []Sensor, err er
 				sensor.Name = item.Value
 			case "WeekProg":
 				sensor.Program = int(intValue)
-			case "OPmode":
+			case "OPMode":
 				sensor.Mode = int(intValue)
 			default:
 				fmt.Printf("Unexpected value name %v\n", valueName)
