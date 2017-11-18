@@ -36,6 +36,7 @@ type Sensor struct {
 	RoomTemperature   float32
 	TargetTemperature float32
 	Program           int
+	Mode              int
 }
 
 const (
@@ -199,12 +200,13 @@ func SetMode(managementURL string, sensorID int, mode int) error {
 func GetSensors(managementURL string, sensorCount int) (sensors []Sensor, err error) {
 	//Create request for all values
 	req := readRequest{}
-	req.Items = make([]readRequestItem, sensorCount*4)
+	req.Items = make([]readRequestItem, sensorCount*5)
 	for i := 0; i < sensorCount; i++ {
-		req.Items[i*4+0].Name = fmt.Sprintf("G%v.RaumTemp", i)
-		req.Items[i*4+1].Name = fmt.Sprintf("G%v.SollTemp", i)
-		req.Items[i*4+2].Name = fmt.Sprintf("G%v.name", i)
-		req.Items[i*4+3].Name = fmt.Sprintf("G%v.WeekProg", i)
+		req.Items[i*5+0].Name = fmt.Sprintf("G%v.RaumTemp", i)
+		req.Items[i*5+1].Name = fmt.Sprintf("G%v.SollTemp", i)
+		req.Items[i*5+2].Name = fmt.Sprintf("G%v.name", i)
+		req.Items[i*5+3].Name = fmt.Sprintf("G%v.WeekProg", i)
+		req.Items[i*5+4].Name = fmt.Sprintf("G%v.OPmode", i)
 	}
 
 	resp, err := readValues(managementURL, req)
@@ -245,6 +247,8 @@ func GetSensors(managementURL string, sensorCount int) (sensors []Sensor, err er
 				sensor.Name = item.Value
 			case "WeekProg":
 				sensor.Program = int(intValue)
+			case "OPmode":
+				sensor.Mode = int(intValue)
 			default:
 				fmt.Printf("Unexpected value name %v\n", valueName)
 			}
